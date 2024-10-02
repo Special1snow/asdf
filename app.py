@@ -52,15 +52,17 @@ def main():
         st.write(f"The most suitable job for the user is: **{best_match}**")
 
         # Generate Seaborn barplot
-        matched_job_skills = filtered_skillset_df[['General Skill', best_match]]
-        
+        matched_job_skills = filtered_skillset_df[['General Skill', best_match]].sort_values(by=best_match, ascending=False)
+
         # Create the plot using seaborn
         plt.figure(figsize=(10, 6))
         sns.barplot(x=matched_job_skills['General Skill'], y=matched_job_skills[best_match])
         plt.title(f"Skill Importance for Best Matched Job: {best_match}")
         plt.xticks(rotation=90)
         plt.tight_layout()
+
         st.pyplot(plt)
+        plt.close()  # Close the plot after rendering
 
     else:
         st.warning("Please upload an Excel file to proceed.")
