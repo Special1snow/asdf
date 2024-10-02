@@ -1,7 +1,7 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
+import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Function to calculate similarity between user skills and job skills
@@ -20,7 +20,7 @@ def load_data():
 
 # Main function to run the Streamlit app
 def main():
-    st.title("HR Skillset Matching Tool with Sunburst Chart")
+    st.title("HR Skillset Matching Tool with Seaborn Visualization")
 
     # Load data
     skillset_df, self_review_df = load_data()
@@ -51,17 +51,16 @@ def main():
 
         st.write(f"The most suitable job for the user is: **{best_match}**")
 
-        # Generate Sunburst Chart
+        # Generate Seaborn barplot
         matched_job_skills = filtered_skillset_df[['General Skill', best_match]]
         
-        fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
-        ax.bar(
-            range(len(matched_job_skills)),
-            matched_job_skills[best_match],
-            tick_label=matched_job_skills['General Skill']
-        )
-        ax.set_title(f"Sunburst Chart - Best Matched Job: {best_match}")
-        st.pyplot(fig)
+        # Create the plot using seaborn
+        plt.figure(figsize=(10, 6))
+        sns.barplot(x=matched_job_skills['General Skill'], y=matched_job_skills[best_match])
+        plt.title(f"Skill Importance for Best Matched Job: {best_match}")
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        st.pyplot(plt)
 
     else:
         st.warning("Please upload an Excel file to proceed.")
