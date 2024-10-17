@@ -82,10 +82,11 @@ for column in columns:
         st.subheader(f"{column_mapping[column]} 점수 분포")
         st.pyplot(fig)
 
-        # 하위 10% 팀 수 계산
+        # 하위 10% 팀 목록 계산 및 출력
         bottom_10_percent_teams = df[df[column] < bottom_10_percent_score]
-        st.write(f"하위 10% 팀 수: {len(bottom_10_percent_teams)}")
         st.write(f"하위 10% 기준 점수: {bottom_10_percent_score:.2f}")
+        st.write(f"하위 10% 해당 팀 목록:")
+        st.dataframe(bottom_10_percent_teams[['Team', column]].sort_values(by=column))
 
     except Exception as e:
         st.error(f"Error processing {column}: {str(e)}")
