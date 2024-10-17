@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
+from scipy import stats
 
 # 데이터 로드
 data = {
@@ -41,27 +42,50 @@ for column in columns:
         mean = df[column].mean()
         std_dev = df[column].std()
 
-        # 표준 정규분포로 변환
-        df[f'{column}_Z'] = (df[column] - mean) / std_dev
+        # 하위 10% 기준점 계산
+        bottom_10_percent = stats.norm.ppf(0.1)
+        bottom_10_percent_score = mean + bottom_10_percent * std_dev
 
         # 그래프 그리기
         fig, ax = plt.subplots(figsize=(10, 6))
-        ax.hist(df[f'{column}_Z'], bins=20, density=True, alpha=0.6, color='b')
+        
+        # 히스토그램 그리기
+        ax.hist(df[column], bins=20, density=True, alpha=0.6, color='b')
 
-        # 표준 정규분포 그리기
-        xmin, xmax = ax.get_xlim()
-        x = np.linspace(xmin, xmax, 100)
-        p = np.exp(-0.5 * ((x - 0) / 1) ** 2) / (np.sqrt(2 * np.pi) * 1)
+        # 정규분포 곡선 그리기
+        x = np.linspace(df[column].min(), df[column].max(), 100)
+        p = stats.norm.pdf(x, mean, std_dev)
         ax.plot(x, p, 'k', linewidth=2)
 
-        # 그래프 세부 설정 (영어로)
-        ax.set_title(f"Standard Normal Distribution of {column} Scores")
-        ax.set_xlabel('Standard Normal Distribution Score (Z)')
+        # 하위 10% 영역 표시
+        ax.fill_between(x, 0, p, where=(x < bottom_10_percent_score), color='red', alpha=0.3)
+
+        # 하위 10% 기준선 표시
+        ax.axvline(x=bottom_10_percent_score, color='red', linestyle='--')
+
+        # 그래프 세부 설정
+        ax.set_title(f"Score Distribution of {column}")
+        ax.set_xlabel('Score')
         ax.set_ylabel('Frequency')
 
+        # x축 눈금 설정
+        start = int(df[column].min() // 10) * 10
+        end = int(df[column].max() // 10 + 1) * 10
+        ax.set_xticks(range(start, end + 1, 10))
+
+        # 범례 추가
+        ax.text(0.95, 0.95, 'Bottom 10%', transform=ax.transAxes, 
+                verticalalignment='top', horizontalalignment='right',
+                bbox=dict(boxstyle='round', facecolor='red', alpha=0.3))
+
         # Streamlit에 그래프 표시 (제목은 한글로)
-        st.subheader(f"{column_mapping[column]} 점수의 표준 정규분포")
+        st.subheader(f"{column_mapping[column]} 점수 분포")
         st.pyplot(fig)
+
+        # 하위 10% 팀 수 계산
+        bottom_10_percent_teams = df[df[column] < bottom_10_percent_score]
+        st.write(f"하위 10% 팀 수: {len(bottom_10_percent_teams)}")
+        st.write(f"하위 10% 기준 점수: {bottom_10_percent_score:.2f}")
 
     except Exception as e:
         st.error(f"Error processing {column}: {str(e)}")
