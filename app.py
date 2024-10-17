@@ -1,71 +1,55 @@
-import streamlit as st
 import pandas as pd
 import numpy as np
-import seaborn as sns
 import matplotlib.pyplot as plt
 
-# Function to calculate similarity between user skills and job skills
-def calculate_similarity(user_skills, job_skills):
-    return np.linalg.norm(np.array(user_skills) - np.array(job_skills))
+# 데이터 로드
+data = {
+    "팀명": list(range(1, 67)),
+    "전략 및 조직": [31.3, 42.2, 60.9, 55.6, 62.5, 69.9, 63.5, 72.3, 66.3, 68.1, 70.6, 75.2, 75.4, 64.4, 76.0, 74.6, 71.4, 79.9, 77.1, 66.9, 77.1, 78.1, 78.4, 69.5, 76.6, 72.9, 79.9, 78.4, 77.9, 78.6, 78.7, 76.0, 80.2, 77.6, 80.0, 80.6, 71.9, 81.7, 81.3, 83.3, 79.7, 79.7, 78.1, 81.9, 82.8, 65.6, 84.0, 77.5, 79.0, 87.1, 82.6, 84.1, 86.2, 86.7, 83.7, 91.8, 85.9, 87.5, 83.3, 88.5, 90.6, 89.9, 90.6, 93.0, 89.8, 100.0],
+    "일하는 방식": [35.4, 66.1, 57.3, 64.6, 78.6, 72.9, 75.0, 71.1, 75.8, 75.0, 76.0, 71.8, 73.8, 76.3, 74.3, 75.6, 75.9, 75.0, 76.3, 77.1, 80.6, 82.6, 75.8, 83.3, 80.2, 77.8, 78.3, 81.9, 79.4, 80.6, 79.4, 79.5, 81.1, 83.3, 82.0, 80.3, 86.1, 81.8, 83.3, 83.3, 84.4, 84.6, 85.4, 82.8, 90.1, 95.8, 83.4, 90.8, 85.4, 85.6, 89.3, 86.2, 86.4, 86.8, 92.6, 90.8, 89.1, 91.7, 95.8, 87.8, 93.8, 92.4, 93.1, 96.9, 97.4, 100.0],
+    "리더십": [34.4, 67.2, 70.3, 68.1, 68.8, 67.5, 75.0, 68.2, 83.1, 75.0, 77.5, 72.3, 71.2, 78.8, 81.3, 82.1, 84.4, 74.6, 76.0, 84.4, 78.8, 83.3, 81.4, 80.5, 79.7, 86.5, 82.3, 79.4, 86.5, 84.4, 85.1, 81.3, 83.1, 83.9, 84.0, 87.5, 89.6, 87.0, 83.3, 82.3, 86.7, 89.1, 87.5, 90.7, 92.2, 94.8, 86.5, 91.3, 93.8, 85.8, 91.5, 91.2, 90.1, 92.3, 92.4, 89.3, 96.1, 94.4, 100.0, 97.9, 92.7, 99.3, 91.7, 96.1, 99.2, 100.0],
+    "역량 개발": [50.0, 61.9, 56.3, 63.0, 55.9, 66.3, 63.3, 68.7, 62.5, 69.5, 64.8, 70.2, 71.5, 74.5, 67.5, 66.8, 68.9, 72.9, 73.4, 75.5, 70.6, 63.3, 72.2, 76.3, 74.6, 75.0, 72.5, 73.0, 73.2, 75.0, 75.4, 82.5, 75.2, 75.8, 76.4, 75.3, 76.7, 75.6, 78.3, 78.3, 78.1, 76.6, 80.0, 76.0, 67.5, 76.7, 79.7, 76.5, 78.9, 81.4, 77.5, 81.8, 82.9, 81.8, 80.6, 78.0, 81.3, 80.5, 75.8, 82.1, 86.7, 85.8, 92.5, 88.8, 90.0, 97.5]
+}
 
-# Function to load and process the uploaded data
-def load_data():
-    uploaded_file = st.file_uploader("Upload your Excel file for HR solution", type=["xlsx"])
-    if uploaded_file is not None:
-        xls = pd.ExcelFile(uploaded_file)
-        skillset_df = pd.read_excel(xls, sheet_name='직무별SkillSet')
-        self_review_df = pd.read_excel(xls, sheet_name='Self Review')
-        return skillset_df, self_review_df
-    return None, None
+# 데이터 타입 명시와 함께 DataFrame 생성
+df = pd.DataFrame(data, dtype={'팀명': int, '전략 및 조직': float, '일하는 방식': float, '리더십': float, '역량 개발': float})
 
-# Main function to run the Streamlit app
-def main():
-    st.title("HR Skillset Matching Tool with Seaborn Visualization")
+# 분석할 컬럼 리스트 정의
+columns = ['전략 및 조직', '일하는 방식', '리더십', '역량 개발']
 
-    # Load data
-    skillset_df, self_review_df = load_data()
-    
-    if skillset_df is not None and self_review_df is not None:
-        st.success("Data loaded successfully!")
-        
-        # Align skills between "직무별SkillSet" and "Self Review"
-        matching_skills = skillset_df['General Skill'].isin(self_review_df['General Skill'])
-        filtered_skillset_df = skillset_df[matching_skills]
-        filtered_self_review_df = self_review_df[self_review_df['General Skill'].isin(filtered_skillset_df['General Skill'])]
-        
-        # Extract relevant data
-        job_titles = filtered_skillset_df.columns[3:]
-        filtered_user_skill_scores = filtered_self_review_df['환산점수'].tolist()
-        
-        # Find the most suitable job for the user
-        best_match = None
-        best_score = float('inf')
-        
-        for job in job_titles:
-            job_skill_scores = filtered_skillset_df[job].tolist()
-            similarity_score = calculate_similarity(filtered_user_skill_scores, job_skill_scores)
-            
-            if similarity_score < best_score:
-                best_score = similarity_score
-                best_match = job
+# 각 항목별로 표준 정규분포를 그리기
+for column in columns:
+    try:
+        # 평균과 표준편차 계산
+        mean = df[column].mean()
+        std_dev = df[column].std()
 
-        st.write(f"The most suitable job for the user is: **{best_match}**")
+        # 표준 정규분포로 변환
+        df[f'{column}_Z'] = (df[column] - mean) / std_dev
 
-        # Generate Seaborn barplot
-        matched_job_skills = filtered_skillset_df[['General Skill', best_match]].sort_values(by=best_match, ascending=False)
-
-        # Create the plot using seaborn
+        # 그래프 그리기
         plt.figure(figsize=(10, 6))
-        sns.barplot(x=matched_job_skills['General Skill'], y=matched_job_skills[best_match])
-        plt.title(f"Skill Importance for Best Matched Job: {best_match}")
-        plt.xticks(rotation=90)
-        plt.tight_layout()
+        plt.hist(df[f'{column}_Z'], bins=20, density=True, alpha=0.6, color='b')
 
-        st.pyplot(plt)
-        plt.close()  # Close the plot after rendering
+        # 표준 정규분포 그리기
+        xmin, xmax = plt.xlim()
+        x = np.linspace(xmin, xmax, 100)
+        p = np.exp(-0.5 * ((x - 0) / 1) ** 2) / (np.sqrt(2 * np.pi) * 1)
+        plt.plot(x, p, 'k', linewidth=2)
 
-    else:
-        st.warning("Please upload an Excel file to proceed.")
+        # 그래프 세부 설정
+        title = f"{column} 점수의 표준 정규분포"
+        plt.title(title)
+        plt.xlabel('표준 정규분포 점수 (Z)')
+        plt.ylabel('빈도')
 
-if __name__ == "__main__":
-    main()
+        # 그래프 저장
+        plt.savefig(f"{column}_distribution.png")
+        
+        # 그래프 표시
+        plt.show()
+
+    except Exception as e:
+        print(f"Error processing {column}: {str(e)}")
+
+print("분석이 완료되었습니다.")
