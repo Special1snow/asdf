@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import streamlit as st
 
 # 데이터 로드
 data = {
@@ -11,11 +12,19 @@ data = {
     "역량 개발": [50.0, 61.9, 56.3, 63.0, 55.9, 66.3, 63.3, 68.7, 62.5, 69.5, 64.8, 70.2, 71.5, 74.5, 67.5, 66.8, 68.9, 72.9, 73.4, 75.5, 70.6, 63.3, 72.2, 76.3, 74.6, 75.0, 72.5, 73.0, 73.2, 75.0, 75.4, 82.5, 75.2, 75.8, 76.4, 75.3, 76.7, 75.6, 78.3, 78.3, 78.1, 76.6, 80.0, 76.0, 67.5, 76.7, 79.7, 76.5, 78.9, 81.4, 77.5, 81.8, 82.9, 81.8, 80.6, 78.0, 81.3, 80.5, 75.8, 82.1, 86.7, 85.8, 92.5, 88.8, 90.0, 97.5]
 }
 
-# 데이터 타입 명시와 함께 DataFrame 생성
-df = pd.DataFrame(data, dtype={'팀명': int, '전략 및 조직': float, '일하는 방식': float, '리더십': float, '역량 개발': float})
+# DataFrame 생성 (dtype 지정 없이)
+df = pd.DataFrame(data)
+
+# 데이터 타입 변환
+df['팀명'] = df['팀명'].astype(int)
+for col in ['전략 및 조직', '일하는 방식', '리더십', '역량 개발']:
+    df[col] = df[col].astype(float)
 
 # 분석할 컬럼 리스트 정의
 columns = ['전략 및 조직', '일하는 방식', '리더십', '역량 개발']
+
+# Streamlit 앱 시작
+st.title('팀 평가 데이터 분석')
 
 # 각 항목별로 표준 정규분포를 그리기
 for column in columns:
@@ -28,28 +37,24 @@ for column in columns:
         df[f'{column}_Z'] = (df[column] - mean) / std_dev
 
         # 그래프 그리기
-        plt.figure(figsize=(10, 6))
-        plt.hist(df[f'{column}_Z'], bins=20, density=True, alpha=0.6, color='b')
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.hist(df[f'{column}_Z'], bins=20, density=True, alpha=0.6, color='b')
 
         # 표준 정규분포 그리기
-        xmin, xmax = plt.xlim()
+        xmin, xmax = ax.get_xlim()
         x = np.linspace(xmin, xmax, 100)
         p = np.exp(-0.5 * ((x - 0) / 1) ** 2) / (np.sqrt(2 * np.pi) * 1)
-        plt.plot(x, p, 'k', linewidth=2)
+        ax.plot(x, p, 'k', linewidth=2)
 
         # 그래프 세부 설정
-        title = f"{column} 점수의 표준 정규분포"
-        plt.title(title)
-        plt.xlabel('표준 정규분포 점수 (Z)')
-        plt.ylabel('빈도')
+        ax.set_title(f"{column} 점수의 표준 정규분포")
+        ax.set_xlabel('표준 정규분포 점수 (Z)')
+        ax.set_ylabel('빈도')
 
-        # 그래프 저장
-        plt.savefig(f"{column}_distribution.png")
-        
-        # 그래프 표시
-        plt.show()
+        # Streamlit에 그래프 표시
+        st.pyplot(fig)
 
     except Exception as e:
-        print(f"Error processing {column}: {str(e)}")
+        st.error(f"Error processing {column}: {str(e)}")
 
-print("분석이 완료되었습니다.")
+st.success("분석이 완료되었습니다.")
